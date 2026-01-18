@@ -11,10 +11,9 @@ from llm_job_filter import MatchedJob, filter_jobs_with_llm
 
 load_dotenv(override=True)
 
-JOB_FILTERS = {
+GOOGLE_JOB_FILTERS = {
     "yesterday": "since yesterday",
     "last_3_days": "in the last 3 days",
-    "full_time": "Full Time",
 }
 
 
@@ -46,7 +45,7 @@ def main():
     cprint("Fetching jobs from Google Jobs...", "cyan")
     all_jobs = []
     for title in job_titles:
-        query = " ".join([title, JOB_FILTERS["yesterday"], JOB_FILTERS["full_time"]])
+        query = " ".join([title, GOOGLE_JOB_FILTERS["yesterday"], "Full Time"])
         jobs = fetch_google_jobs(query, pages=1)
         all_jobs.extend(jobs)
 
