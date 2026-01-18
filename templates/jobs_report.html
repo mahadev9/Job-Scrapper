@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matched Jobs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 30px;
+        }
+
+        th.sortable:hover {
+            background-color: #45a049;
+        }
+
+        th.sortable::after {
+            content: '⇅';
+            position: absolute;
+            right: 10px;
+            opacity: 0.5;
+        }
+
+        th.sortable.asc::after {
+            content: '↑';
+            opacity: 1;
+        }
+
+        th.sortable.desc::after {
+            content: '↓';
+            opacity: 1;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .match-score {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .apply-links a {
+            color: #2196F3;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+
+        .apply-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Matched Jobs Report</h1>
+    <p>Generated on: {{ generated_time }}</p>
+    <p>Total matched jobs: {{ jobs|length }}</p>
+    <table id="jobsTable">
+        <thead>
+            <tr>
+                <th class="sortable" data-column="0" data-type="string">Job Title</th>
+                <th>Company</th>
+                <th>Location</th>
+                <th class="sortable" data-column="3" data-type="number">Match Score</th>
+                <th>Match Reason</th>
+                <th>Apply Links</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+            <tr>
+                <td>{{ job.job_title }}</td>
+                <td>{{ job.company_name }}</td>
+                <td>{{ job.job_location }}</td>
+                <td class="match-score">{{ "%.2f"|format(job.match_score) }}</td>
+                <td>{{ job.match_reason }}</td>
+                <td class="apply-links">
+                    {% if job.apply_options %}
+                    {% for option in job.apply_options %}
+                    <a href="{{ option.apply_url }}" target="_blank">{{ option.apply_title }}</a>
+                    {% endfor %}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const table = document.getElementById('jobsTable');
+            const headers = table.querySelectorAll('th.sortable');
+
+            headers.forEach(header => {
+                header.addEventListener('click', function () {
+                    const column = parseInt(this.dataset.column);
+                    const type = this.dataset.type;
+                    const tbody = table.querySelector('tbody');
+                    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+                    // Determine sort direction
+                    const isAscending = this.classList.contains('asc');
+
+                    // Remove sort indicators from all headers
+                    headers.forEach(h => h.classList.remove('asc', 'desc'));
+
+                    // Add sort indicator to current header
+                    this.classList.add(isAscending ? 'desc' : 'asc');
+
+                    // Sort rows
+                    rows.sort((a, b) => {
+                        const aValue = a.cells[column].textContent.trim();
+                        const bValue = b.cells[column].textContent.trim();
+
+                        let comparison = 0;
+                        if (type === 'number') {
+                            comparison = parseFloat(aValue) - parseFloat(bValue);
+                        } else {
+                            comparison = aValue.localeCompare(bValue);
+                        }
+
+                        return isAscending ? -comparison : comparison;
+                    });
+
+                    // Re-append sorted rows
+                    rows.forEach(row => tbody.appendChild(row));
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
