@@ -1,5 +1,7 @@
 from typing import Dict, List
 
+from llm_models import LLM_MODELS, LLMModels
+
 from dotenv import load_dotenv
 from langchain.chat_models import BaseChatModel, init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -59,11 +61,6 @@ RESUME_DETAILS = {
     ),
 }
 
-LLM_MODELS = {
-    "openai": "openai:gpt-5-mini",
-    "gemini": "google_genai:gemini-3-flash-preview",
-}
-
 
 class ApplyOptions(BaseModel):
     apply_url: str = Field(description="URL to apply for the job")
@@ -86,13 +83,15 @@ class MatchedJobsResponse(BaseModel):
     matched_jobs: List[MatchedJob] = Field(default_factory=list)
 
 
-def create_llm_client(model) -> BaseChatModel:
-    return init_chat_model(
-        model=LLM_MODELS[model],
-        max_retries=3,
-        temperature=1.0,
-        use_responses_api=True,
-    )
+def create_llm_client(model: LLMModels) -> BaseChatModel:
+    args = {
+        "model": LLM_MODELS[model],
+        "max_retries": 3,
+        "temperature": 1.0,
+    }
+    if model == LLMModels.OPENAI:
+        args["use_responses_api"] = True
+    return init_chat_model(**args)
 
 
 def gemini_msg_content(jobs) -> List[Dict[str, str]]:
@@ -129,9 +128,9 @@ def filter_jobs_with_llm(model, jobs) -> MatchedJobsResponse:
     client = create_llm_client(model).with_structured_output(MatchedJobsResponse)
 
     content = []
-    if model == "gemini":
+    if model == LLMModels.GEMINI:
         content = gemini_msg_content(jobs)
-    elif model == "openai":
+    elif model == LLMModels.OPENAI:
         content = openai_msg_content(jobs)
 
     messages = [
@@ -161,7 +160,7 @@ if __name__ == "__main__":
         },
     ]
 
-    response = filter_jobs_with_llm("gemini", sample_jobs)
+    response = filter_jobs_with_llm(LLMModels.GEMINI, sample_jobs)
     for job in response.matched_jobs:
         print(
             f"Job Title: {job.job_title}, Match Score: {job.match_score}, Reason: {job.match_reason}"

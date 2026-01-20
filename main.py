@@ -8,6 +8,7 @@ from termcolor import cprint
 
 from google_jobs import fetch_google_jobs
 from llm_job_filter import MatchedJob, filter_jobs_with_llm
+from llm_models import LLMModels
 
 load_dotenv(override=True)
 
@@ -35,7 +36,7 @@ def write_jobs_to_file(filepath, jobs: List[MatchedJob]):
 
 def main():
     curr_dir = os.path.dirname(os.path.abspath(__file__))
-    ai_model = "gemini"  # Options: "openai" or "gemini"
+    ai_model = LLMModels.GEMINI
     job_titles = [
         "Software Engineer",
         "Machine Learning (ML) Engineer",
