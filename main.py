@@ -1,4 +1,5 @@
 import os
+from argparse import ArgumentParser
 from datetime import datetime
 from typing import List
 
@@ -34,9 +35,8 @@ def write_jobs_to_file(filepath, jobs: List[MatchedJob]):
         f.write(html_content)
 
 
-def main():
+def main(parsed_args):
     curr_dir = os.path.dirname(os.path.abspath(__file__))
-    ai_model = LLMModels.GEMINI
     job_titles = [
         "Software Engineer",
         "Machine Learning (ML) Engineer",
@@ -57,7 +57,9 @@ def main():
     for i in range(0, len(all_jobs), 10):
         batch = all_jobs[i : i + 10]
         cprint(f"Processing jobs {i + 1} to {i + len(batch)}", "yellow", end="... ")
-        matched_jobs_response = filter_jobs_with_llm(ai_model, batch)
+        matched_jobs_response = filter_jobs_with_llm(
+            LLMModels(parsed_args.model), batch
+        )
         all_jobs_with_scores.extend(matched_jobs_response.matched_jobs)
         cprint(f"Done ({len(matched_jobs_response.matched_jobs)})", "yellow")
 
@@ -70,4 +72,14 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = ArgumentParser()
+    args.add_argument(
+        "--model",
+        type=str,
+        default="gemini",
+        choices=[model.value for model in LLMModels],
+        help="AI model to use",
+    )
+    parsed_args = args.parse_args()
+
+    main(parsed_args)

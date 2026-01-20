@@ -1,7 +1,6 @@
 import os
 from typing import List
 
-from dotenv import load_dotenv
 from serpapi import GoogleSearch
 
 
@@ -36,9 +35,3 @@ def fetch_google_jobs(query, pages, location="United States") -> List:
         next_page_token = results.get("serpapi_pagination", {}).get("next_page_token")
 
     return all_jobs
-
-
-if __name__ == "__main__":
-    load_dotenv(override=True)
-
-    print(fetch_google_jobs("Software Engineer"))

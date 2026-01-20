@@ -2,7 +2,6 @@ from typing import Dict, List
 
 from llm_models import LLM_MODELS, LLMModels
 
-from dotenv import load_dotenv
 from langchain.chat_models import BaseChatModel, init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
@@ -139,29 +138,3 @@ def filter_jobs_with_llm(model, jobs) -> MatchedJobsResponse:
     ]
 
     return client.invoke(messages)
-
-
-if __name__ == "__main__":
-    load_dotenv(override=True)
-
-    # Example usage
-    sample_jobs = [
-        {
-            "job_title": "Senior AI Engineer",
-            "job_description": "Looking for an experienced AI Engineer with expertise in NLP and deep learning.",
-            "job_location": "New York, NY",
-            "company_name": "Tech Innovations",
-        },
-        {
-            "job_title": "Junior Software Developer",
-            "job_description": "Entry-level position for software development with basic programming skills.",
-            "job_location": "San Francisco, CA",
-            "company_name": "Startup Hub",
-        },
-    ]
-
-    response = filter_jobs_with_llm(LLMModels.GEMINI, sample_jobs)
-    for job in response.matched_jobs:
-        print(
-            f"Job Title: {job.job_title}, Match Score: {job.match_score}, Reason: {job.match_reason}"
-        )

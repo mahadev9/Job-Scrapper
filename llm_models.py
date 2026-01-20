@@ -1,4 +1,7 @@
-class LLMModels(str):
+from enum import Enum
+
+
+class LLMModels(str, Enum):
     OPENAI = "openai"
     GEMINI = "gemini"
 
