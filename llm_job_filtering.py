@@ -1,10 +1,10 @@
 from typing import Dict, List
 
-from llm_models import LLM_MODELS, LLMModels
-
-from langchain.chat_models import BaseChatModel, init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
+
+from llm_models import LLMModels, create_llm_client
+from resume import RESUME_DETAILS
 
 SYSTEM_PROMPT = """
 You are an expert job matching assistant. Your task is to analyze job listings against a candidate's resume and determine the best matches.
@@ -44,22 +44,6 @@ Job Listings:
 Return a structured list of matched jobs with their match scores and reasons.
 """
 
-RESUME_DETAILS = {
-    "link": "https://www.maitri.pro/Mahadev%20Mahesh%20Maitri%20Resume.pdf",
-    "summary": (
-        "Results-driven AI/ML Engineer with 4+ years of experience specializing "
-        "in intelligent document processing, RAG systems, and NLP applications. "
-        "Expertise in developing production-ready solutions using Python, FastAPI, "
-        "LangChain, and transformer models, achieving 92% extraction accuracy and "
-        "87% precision in complex risk assessment tasks. Proven track record in "
-        "fine-tuning LLMs, building agentic workflows with LangGraph, and implementing "
-        "semantic search systems that improve response relevance by 20-25%. "
-        "Strong foundation in deep learning frameworks (PyTorch, TensorFlow) "
-        "with demonstrated ability to deliver measurable business impact through "
-        "AI-driven automation and cost optimization."
-    ),
-}
-
 
 class ApplyOptions(BaseModel):
     apply_url: str = Field(description="URL to apply for the job")
@@ -80,17 +64,6 @@ class MatchedJob(BaseModel):
 
 class MatchedJobsResponse(BaseModel):
     matched_jobs: List[MatchedJob] = Field(default_factory=list)
-
-
-def create_llm_client(model: LLMModels) -> BaseChatModel:
-    args = {
-        "model": LLM_MODELS[model],
-        "max_retries": 3,
-        "temperature": 1.0,
-    }
-    if model == LLMModels.OPENAI:
-        args["use_responses_api"] = True
-    return init_chat_model(**args)
 
 
 def gemini_msg_content(jobs) -> List[Dict[str, str]]:
@@ -132,9 +105,9 @@ def filter_jobs_with_llm(model, jobs) -> MatchedJobsResponse:
     elif model == LLMModels.OPENAI:
         content = openai_msg_content(jobs)
 
-    messages = [
-        SystemMessage(content=SYSTEM_PROMPT),
-        HumanMessage(content=content),
-    ]
-
-    return client.invoke(messages)
+    return client.invoke(
+        [
+            SystemMessage(content=SYSTEM_PROMPT),
+            HumanMessage(content=content),
+        ]
+    )
